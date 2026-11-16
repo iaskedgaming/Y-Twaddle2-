@@ -1,8 +1,54 @@
-import db from "./firebase.js";
-
 //Creating a new Tweet
 const postForm = document.querySelectorAll(".post-sender .post-form");
 const postCont = document.querySelector(".posts-container");
+const postPopupCont = document.querySelector(".popup-container");
+const postFeedSec = document.querySelector(".feed");
+const postsStorageKey = "y-twaddle-posts";
+
+function getSavedPosts() {
+  const savedPosts = localStorage.getItem(postsStorageKey);
+  if (savedPosts === null) {
+    return [];
+  }
+
+  const posts = JSON.parse(savedPosts);
+  if (
+    !Array.isArray(posts) ||
+    posts.some(
+      (post) =>
+        typeof post.content !== "string" ||
+        !Number.isFinite(post.createdAt)
+    )
+  ) {
+    throw new Error("Saved posts have an invalid format.");
+  }
+
+  return posts;
+}
+
+function getPostTime(createdAt) {
+  const elapsedSeconds = Math.max(
+    0,
+    Math.floor((Date.now() - createdAt) / 1000)
+  );
+  if (elapsedSeconds < 60) {
+    return `${elapsedSeconds}s`;
+  }
+  if (elapsedSeconds < 3600) {
+    return `${Math.floor(elapsedSeconds / 60)}m`;
+  }
+  if (elapsedSeconds < 86400) {
+    return `${Math.floor(elapsedSeconds / 3600)}h`;
+  }
+  if (elapsedSeconds < 604800) {
+    return `${Math.floor(elapsedSeconds / 86400)}d`;
+  }
+
+  const date = new Date(createdAt);
+  return `${date.getFullYear()} ${date.toLocaleString("en", {
+    month: "short",
+  }).toLowerCase()} ${date.getDate()}`;
+}
 
 function btnsEffects() {
   //Change the post header button icon color when hover it
@@ -66,7 +112,7 @@ function btnsEffects() {
 }
 btnsEffects();
 
-function createPost(content, time) {
+function createPost(post) {
   //creating the post
   let newPost = document.createElement("div");
   newPost.setAttribute("class", "post");
@@ -82,7 +128,7 @@ function createPost(content, time) {
       <h2>Jeff Richards</h2>
       <span class="username">@jeffrichards</span>
       <span class="dot">.</span>
-      <span class="time">${time}</span>
+      <span class="time">${getPostTime(post.createdAt)}</span>
       <button>
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -93,7 +139,6 @@ function createPost(content, time) {
       </button>
     </div>
     <div class="post-content">
-      ${content}
     </div>
     <div class="post-btns">
       <button class="comment-btn">
@@ -140,113 +185,50 @@ function createPost(content, time) {
     </button>
   </div>
 </div>`;
-  postCont.appendChild(newPost);
+  const postContent = newPost.querySelector(".post-content");
+  post.content.split(/\n/).forEach((line) => {
+    const paragraph = document.createElement("p");
+    paragraph.textContent = line;
+    postContent.appendChild(paragraph);
+  });
 
-  const popupCont = document.querySelector(".popup-container");
-  const feedSec = document.querySelector(".feed");
-  feedSec.style.display = "";
+  postCont.appendChild(newPost);
 
   btnsEffects();
 }
 
-postForm.forEach((form, index) => {
+postForm.forEach((form) => {
   form.addEventListener("submit", (e) => {
     e.preventDefault();
-    const twitterInp = document.querySelectorAll(
-      ".post-sender .post-form textarea"
-    );
+    const post = {
+      content: form.querySelector("textarea").value,
+      createdAt: Date.now(),
+    };
 
-    //get the twitter content
-    const textArr = twitterInp[index].value.split(/\n/);
-    let postText = "";
-    for (let i = 0; i < textArr.length; i++) {
-      postText += `<p>${textArr[i]}</p>`;
+    try {
+      const posts = getSavedPosts();
+      posts.unshift(post);
+      localStorage.setItem(postsStorageKey, JSON.stringify(posts));
+    } catch (error) {
+      console.error("Could not save the post in local storage.", error);
+      window.alert("Your post could not be saved in this browser.");
+      return;
     }
 
-    //get the time of the tweet
-    let postId;
-    function genTime() {
-      const date = new Date();
-      postId = `${date.getFullYear()}_${
-        date.getMonth() + 1
-      }_${date.getDate()}_${date.getHours()}_${date.getMinutes()}_${date.getSeconds()}`;
+    createPost(post);
+    if (form.closest(".popup-container")) {
+      postPopupCont.style.display = "none";
+      postFeedSec.style.display = "";
     }
-    genTime();
-    db.collection("posts").doc(postId).set({ id: postId, content: postText });
-
-    popupCont.style.display = "none";
     form.reset();
   });
 });
 
-db.collection("posts").onSnapshot((snapshot) => {
-  let changes = snapshot.docChanges();
-  changes.forEach((change) => {
-    if (change.type == "added") {
-      const content = change.doc.data().content;
-      const postId = change.doc.data().id;
-      let idSplited = postId.split("_");
-
-      const date = new Date();
-      let nowTime = `${date.getFullYear()}_${
-        date.getMonth() + 1
-      }_${date.getDate()}_${date.getHours()}_${date.getMinutes()}_${date.getSeconds()}`;
-      let nowTimeArr = nowTime.split("_");
-
-      //transform the array elements into numbers
-      for (let i = 0; i < idSplited.length; i++) {
-        idSplited.splice(i, 1, Number(idSplited[i]));
-        nowTimeArr.splice(i, 1, Number(nowTimeArr[i]));
-      }
-
-      const months = {
-        1: "jan",
-        2: "feb",
-        3: "mar",
-        4: "apr",
-        5: "may",
-        6: "jun",
-        7: "jul",
-        8: "aug",
-        9: "sep",
-        10: "oct",
-        11: "nov",
-        12: "dec",
-      };
-
-      let time;
-      if (nowTimeArr[0] == idSplited[0]) {
-        if (nowTimeArr[1] == idSplited[1]) {
-          if (nowTimeArr[2] == idSplited[2]) {
-            if (nowTimeArr[3] == idSplited[3]) {
-              if (nowTimeArr[4] == idSplited[4]) {
-                time = `${nowTimeArr[5] - idSplited[5]}s`;
-              } else {
-                time = `${nowTimeArr[4] - idSplited[4]}m`;
-              }
-            } else if (
-              nowTimeArr[3] - idSplited[3] == 1 &&
-              nowTimeArr[4] - idSplited[4] < 0
-            ) {
-              time = `${60 - idSplited[4] + nowTimeArr[4]}`;
-            } else {
-              time = `${nowTimeArr[3] - idSplited[3]}h`;
-            }
-          } else if (
-            nowTimeArr[2] - idSplited[2] == 1 &&
-            nowTimeArr[3] - idSplited[3] < 0
-          ) {
-            time = `${24 - idSplited[3] + nowTimeArr[3]}h`;
-          } else {
-            time = `${nowTimeArr[2] - idSplited[2]}d`;
-          }
-        } else {
-          time = `${months[nowTimeArr[1]]} ${nowTimeArr[2]}`;
-        }
-      } else {
-        time = `${nowTimeArr[0]} ${months[nowTimeArr[1]]} ${nowTimeArr[2]}`;
-      }
-      createPost(content, time);
-    }
-  });
-});
+try {
+  getSavedPosts()
+    .reverse()
+    .forEach((post) => createPost(post));
+} catch (error) {
+  console.error("Could not load posts from local storage.", error);
+  window.alert("Saved posts could not be loaded from this browser.");
+}

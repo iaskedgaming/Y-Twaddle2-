@@ -1,0 +1,44 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="scripts/database.js"></script>
+    <title>testing</title>
+    <link rel="icon" href="./images/twitter-icon.svg" />
+</head>
+<body>
+
+    <h1>Data</h1>
+
+    <p>Player: <span id="name">Loading...</span></p>
+    <p>Score: <span id="score">Loading...</span></p>
+    <p>Rank: <span id="level">Loading...</span></p>
+    <br>
+    <p>link to <a href="debug/SendingDataDebug.html">debug program</a> to send data</p>
+    <script>
+        async function updateWebsite() {
+            try {
+                const data = await getGameData();
+
+                document.getElementById("name").textContent =
+                    data.playerName ?? "Unknown";
+
+                document.getElementById("score").textContent =
+                    data.score ?? 0;
+
+                document.getElementById("level").textContent =
+                    data.rank ?? 0;
+
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        updateWebsite();
+
+        // Refresh every 2 seconds
+        setInterval(updateWebsite, 2000);
+    </script>
+
+</body>
+</html>

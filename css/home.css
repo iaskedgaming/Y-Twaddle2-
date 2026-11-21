@@ -32,6 +32,10 @@ p {
 .feed .posts-container {
   background-color: #000000;
 }
+.posts-container {
+  max-height: 100dvh;
+  overflow-y: scroll;
+}
 
 .feed .header-feed {
   width: 100%;

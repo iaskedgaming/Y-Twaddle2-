@@ -185,6 +185,18 @@ function createPost(post) {
     </button>
   </div>
 </div>`;
+  if (["A", "B", "C", "F", "S"].includes(post.rank)) {
+    newPost.querySelector(".profile-img img").src =
+      `images/ranks/${post.rank}rank.png`;
+  }
+  if (post.username) {
+    newPost.querySelector(".post-header h2").textContent = post.username;
+  }
+  if (post.score !== null && post.score !== undefined) {
+    newPost.querySelector(".post-header .username").textContent =
+      `@${post.score}`;
+  }
+
   const postContent = newPost.querySelector(".post-content");
   post.content.split(/\n/).forEach((line) => {
     const paragraph = document.createElement("p");
@@ -203,6 +215,9 @@ postForm.forEach((form) => {
     const post = {
       content: form.querySelector("textarea").value,
       createdAt: Date.now(),
+      username: localStorage.getItem("username"),
+      rank: localStorage.getItem("rank"),
+      score: localStorage.getItem("score"),
     };
 
     try {

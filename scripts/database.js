@@ -29,3 +29,23 @@ async function getGameData() {
 
     return gameData;
 }
+
+async function updateUserData() {
+    const username = localStorage.getItem("username");
+    const rank = localStorage.getItem("rank");
+    const score = localStorage.getItem("score");
+    try {
+        const data = await getGameData();
+
+        localStorage.setItem("username", data.playerName ?? "Unknown");
+        localStorage.setItem("score", data.score ?? 0);
+        localStorage.setItem("rank", data.rank ?? 0);
+
+        } catch (error) {
+            console.error(error);
+    }
+    finally {
+        console.log(username, score, rank);
+    }
+}
+

@@ -102,7 +102,7 @@
         </nav>
         <footer class="sidebar-footer">
           <button type="button" class="profile-btn">
-            <img
+            <img class="userPfp"
               src="https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=751&q=80"
               alt="profile image"
             />
@@ -127,7 +127,7 @@
         </header>
         <div class="post-sender">
           <div class="img-container">
-            <img
+            <img class="userPfp"
               src="images/ranks/Arank.png"
               alt="profile image"
             />
@@ -478,10 +478,11 @@
           <p>
             hi his is unfinished
           </p>
+          <img style ="height: 200px;"src="https://media1.tenor.com/m/ccI57P9mUbcAAAAC/stan-marsh.gif" alt="oh my god its coderotted"/>
           <p>
-            akallalal.
+            todo-remove this later or make this a welcome to <img style="height: 20px;" src="images/twitter-icon.svg" alt="Y"/> Welcome message
           </p>
-          <p>I hope you enjoy it!</p>
+          <p>burp</p>
         </div>
         <div class="tweet-popup">
           <div class="popup-header">
@@ -534,12 +535,27 @@
 
     <script src="./scripts/home.js"></script>
     <script src="./scripts/post.js"></script>
+    <script src="./scripts/database.js"></script>
+    <script>
+      updateUserData();
 
-    <!-- this is the code for the twitter embed -->
-    <script
-      async
-      src="https://platform.twitter.com/widgets.js"
-      charset="utf-8"
-    ></script>
+      const username = localStorage.getItem("username");
+      const rank = localStorage.getItem("rank");
+      const score = localStorage.getItem("score");
+
+    // change each userPfp element to the corresponding image  
+    let avatarUrl = `images/ranks/${rank}rank.png`;
+    document.querySelectorAll(".userPfp").forEach((img) => {
+      img.src = avatarUrl;
+    });      
+    let userNameElements = document.querySelectorAll("#profile-name");
+    userNameElements.forEach((element) => {
+      element.textContent = username;
+    });
+    let scorenameElem = document.querySelectorAll("#username");
+    scorenameElem.forEach((element) => {
+      element.textContent = `@${score}`;
+    });
+    </script>
   </body>
 </html>
